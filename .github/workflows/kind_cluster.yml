@@ -1,9 +1,9 @@
-name: Kind Cluster Setup
+name: Kind cluster CI
 
 on: [push, pull_request]
 
 jobs:
-  create-cluster:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -12,8 +12,6 @@ jobs:
 
     - name: Set up Kind
       uses: engineerd/setup-kind@v0.5.0
-      with:
-        version: 'v0.11.1'  # Use the latest version of Kind
 
     - name: Verify Docker is Running
       run: |
@@ -23,8 +21,8 @@ jobs:
     - name: Create Kind Cluster
       run: |
         set -x
-        kind create cluster --config .github/kind/kind-gpu.yaml --wait 5m
-        cluster_name=$(grep '^name:' .github/kind/kind-gpu.yaml | sed 's/name: //')
+        kind create cluster --config kind-gpu.yaml --wait 5m
+        cluster_name=$(grep '^name:' kind-gpu.yaml | sed 's/name: //')
         echo "Cluster name: $cluster_name"
       shell: bash
 
