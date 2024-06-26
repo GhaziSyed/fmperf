@@ -15,15 +15,28 @@ jobs:
       with:
         version: 'v0.11.1'  # Use the latest version of Kind
 
+    - name: Verify Docker is Running
+      run: |
+        sudo systemctl status docker
+        docker info
+
     - name: Create Kind Cluster
       run: |
-        kind create cluster --config kind-gpu.yaml
-        # Extract and print the cluster name
-        cluster_name=$(grep '^name:' kind-gpu.yaml | sed 's/name: //')
+        set -x
+        kind create cluster --config .github/kind/kind-gpu.yaml --wait 5m
+        cluster_name=$(grep '^name:' .github/kind/kind-gpu.yaml | sed 's/name: //')
         echo "Cluster name: $cluster_name"
       shell: bash
 
     - name: Verify Cluster
       run: |
         kubectl cluster-info
+      shell: bash
+
+    - name: Debugging Kind Cluster
+      if: failure()
+      run: |
+        docker ps
+        docker logs $(docker ps -q --filter "name=kind-control-plane")
+        kubectl describe nodes
       shell: bash
