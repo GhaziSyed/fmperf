@@ -3,38 +3,21 @@ name: Kind cluster CI
 on: [push, pull_request]
 
 jobs:
-  test:
+  create-kind-cluster:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Kind
-      uses: engineerd/setup-kind@v0.5.0
+      - name: Set up Kind
+        uses: engineerd/setup-kind@v0.5.0
+        with:
+          version: '0.7.0'
 
-    - name: Verify Docker is Running
-      run: |
-        sudo systemctl status docker
-        docker info
+      - name: Create Kind Cluster
+        run: |
+          kind create cluster --name kind --config .github/kind/kind-gpu.yaml --wait 5m
 
-    - name: Create Kind Cluster
-      run: |
-        set -x
-        kind create cluster --config kind-gpu.yaml --wait 5m
-        cluster_name=$(grep '^name:' kind-gpu.yaml | sed 's/name: //')
-        echo "Cluster name: $cluster_name"
-      shell: bash
-
-    - name: Verify Cluster
-      run: |
-        kubectl cluster-info
-      shell: bash
-
-    - name: Debugging Kind Cluster
-      if: failure()
-      run: |
-        docker ps
-        docker logs $(docker ps -q --filter "name=kind-control-plane")
-        kubectl describe nodes
-      shell: bash
+      - name: Verify Cluster
+        run: kubectl cluster-info
